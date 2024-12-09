@@ -57,8 +57,14 @@ auctionNameSpace.on("connection", (socket) => {
 })
 
 const PORT = process.env.PORT || 5000
+mongoose.connect(process.env.CONNECTION_URL)
+    .then(() => {
+        server.listen(PORT, () => {
+            console.log(`Server running at port ${PORT}`);
+        })
+    })
+    .catch((error) => {
+        console.log(error);
+    });
 
 
-server.listen(PORT, () => {
-    console.log(`Server running at port ${PORT}`);
-})
