@@ -3,7 +3,8 @@ import mongoose from 'mongoose'
 import dotenv from 'dotenv'
 import http from 'http'
 import { Server } from 'socket.io'
-import { log } from 'console'
+import { auctionRoute, authRoute, bidRoute, chatRoute, userRoute } from './routes/index.js'
+import { verifyToken } from './middleware/authMiddleware.js'
 
 
 dotenv.config()
@@ -11,12 +12,17 @@ dotenv.config()
 
 const app = express()
 
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
-
 const server = http.createServer(app)
 const io = new Server(server)
 
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+
+app.use("/api/v1/auth", authRoute)
+app.use("/api/v1/user", verifyToken, userRoute)
+app.use("/api/v1/auction", verifyToken, auctionRoute)
+app.use("/api/v1/chat", verifyToken, chatRoute)
+app.use("/api/v1/bid", verifyToken, bidRoute)
 
 
 const chatNameSpace = io.of("/chat");
@@ -27,7 +33,7 @@ chatNameSpace.on('connection', (socket) => {
 
     socket.on('send-message', (data) => {
         console.log(data);
-        
+
         const { chatRoomId, message, user } = data
         chatNameSpace.to(chatRoomId).emit('receive-message', { user, message })
 
@@ -43,11 +49,11 @@ chatNameSpace.on('connection', (socket) => {
     })
 })
 
-auctionNameSpace.on("connection",(socket) => {
+auctionNameSpace.on("connection", (socket) => {
     console.log(`Auction user connected: ${socket.id}`);
-    socket.on('place-bid',(data) => {
+    socket.on('place-bid', (data) => {
         auctionNameSpace
-    })   
+    })
 })
 
 const PORT = process.env.PORT || 5000
