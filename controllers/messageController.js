@@ -1,4 +1,4 @@
-import Message from "../models/messageModel.js"
+import Message from "../models/chatModel.js"
 import User from "../models/userModel.js"
 import { DateTime } from "luxon"
 

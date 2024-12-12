@@ -1,4 +1,4 @@
-import Bid from "../models/bidModel";
+import Bid from "../models/bidModel.js";
 
 
 export const getBids = async (req, res) => {

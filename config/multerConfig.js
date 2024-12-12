@@ -1,5 +1,6 @@
 import multer from 'multer';
 import path from 'path';
+import { ensureUploadDirectory } from '../utils/fileUtils.js';
 
 
 ensureUploadDirectory()
