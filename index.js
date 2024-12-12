@@ -7,7 +7,8 @@ import { auctionRoute, authRoute, bidRoute, chatRoute, userRoute } from './route
 import { verifyToken } from './middleware/authMiddleware.js'
 import Auction from './models/auctionModel.js'
 import Bid from './models/bidModel.js'
-
+import path from 'path'
+import { fileURLToPath } from 'url'
 
 dotenv.config()
 
@@ -26,6 +27,10 @@ app.use("/api/v1/user", verifyToken, userRoute)
 app.use("/api/v1/chat", verifyToken, chatRoute)
 app.use("/api/v1/bid", verifyToken, bidRoute)
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const connectedUsers = new Map();
 app.set('connectedUsers', connectedUsers);

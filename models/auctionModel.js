@@ -29,18 +29,21 @@ const auctionSchema = new mongoose.Schema({
         type: Date,
     },
     state: {
-        type:String,
-        enum:['pending','active','completed','cancelled'],
-        default:'pending',
+        type: String,
+        enum: ['pending', 'active', 'completed', 'cancelled'],
+        default: 'pending',
     },
-    createdBy:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'User',
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
     },
+    images: [{
+        type: String,
+    }]
 
 })
 
-const Auction = mongoose.model('Auction',auctionSchema)
+const Auction = mongoose.model('Auction', auctionSchema)
 
 
 export default Auction
