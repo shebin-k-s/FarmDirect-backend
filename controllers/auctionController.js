@@ -9,6 +9,10 @@ export const createAuction = async (req, res) => {
     }
     const createdBy = req.user.userId
 
+    let imagePaths = [];
+    if (req.files && req.files.length > 0) {
+        imagePaths = req.files.map(file => file.path);  // Store the file paths in an array
+    }
 
     try {
         const auction = new Auction({
@@ -18,6 +22,7 @@ export const createAuction = async (req, res) => {
             startTime,
             endTime,
             createdBy,
+            images: imagePaths,
         });
 
         const savedAuction = await auction.save();
@@ -27,10 +32,16 @@ export const createAuction = async (req, res) => {
     }
 }
 
+
 export const getAllAuctions = async (req, res) => {
     try {
-        const auctions = await Auction.find().populate("createdBy", "firstName email");
-        res.status(200).json(auctions);
+        const auctions = await Auction.find({
+            state: { $nin: ['completed', 'cancelled'] },
+        })
+            .populate("createdBy", "firstName email")
+            .sort({ startTime: 1 });
+
+        return res.status(200).json(auctions);
     } catch (error) {
         res.status(500).json({ message: "Error fetching auctions", error: error.message });
     }
@@ -54,7 +65,10 @@ export const getCreatedAuctions = async (req, res) => {
     const userId = req.user.userId;
 
     try {
-        const auctions = await Auction.find({ creator: userId });
+        const auctions = await Auction.find({ creator: userId })
+            .populate("createdBy", "firstName email")
+            .sort({ startTime: 1 });
+
 
         if (auctions.length === 0) {
             return res.status(404).json({ message: 'No auctions are created by this user.' });
@@ -79,7 +93,10 @@ export const getParticipatedAuctions = async (req, res) => {
 
         const auctionIds = [...new Set(bids.map(bid => bid.auction.toString()))];
 
-        const auctions = await Auction.find({ '_id': { $in: auctionIds } });
+        const auctions = await Auction.find({ '_id': { $in: auctionIds } })
+            .populate("createdBy", "firstName email")
+            .sort({ startTime: 1 });
+
         return res.status(200).json({ auctions });
     } catch (error) {
         console.error('Error fetching auctions:', error);
