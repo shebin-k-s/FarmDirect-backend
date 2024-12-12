@@ -11,7 +11,7 @@ const messageSchema = new mongoose.Schema({
         ref: 'User',
         required: true,
     },
-    content: {
+    message: {
         type: String,
         required: true
     },
@@ -25,3 +25,7 @@ const messageSchema = new mongoose.Schema({
         default: Date.now,
     }
 })
+
+const Message = mongoose.model('Message', messageSchema)
+
+export default Message
