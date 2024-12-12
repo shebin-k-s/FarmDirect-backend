@@ -6,6 +6,7 @@ import { Server } from 'socket.io'
 import { auctionRoute, authRoute, bidRoute, chatRoute, userRoute } from './routes/index.js'
 import { verifyToken } from './middleware/authMiddleware.js'
 import Auction from './models/auctionModel.js'
+import Bid from './models/bidModel.js'
 
 
 dotenv.config()
@@ -184,6 +185,15 @@ auctionNameSpace.on('connection', async (socket) => {
                     bidAmount,
                     userId,
                 });
+
+                const newBid = new Bid({
+                    auction: auctionId,
+                    bidder: userId,
+                    amount: bidAmount,
+                });
+
+                await newBid.save();
+
             } catch (error) {
                 console.error('Error placing bid:', error);
                 auctionNameSpace.to(auctionId).emit('bid-error', { message: 'Failed to place bid.' });
