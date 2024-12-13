@@ -43,6 +43,17 @@ const auctionSchema = new mongoose.Schema({
 
 })
 
+auctionSchema.pre('save', function (next) {
+    const currentTime = new Date();
+
+    if (this.endTime < currentTime && this.highestBid >= this.startingBid) {
+        this.state = 'completed';
+    } else if (this.startTime < currentTime) {
+        this.state = 'active';
+    }
+    next();
+});
+
 const Auction = mongoose.model('Auction', auctionSchema)
 
 
