@@ -6,7 +6,7 @@ const router = express.Router()
 
 
 router.route('/create-auction')
-    .post(upload.array('auctionImages', 5), createAuction); // 'auctionImages' is the form field name for image files
+    .post(upload.array('auctionImages', 5), createAuction);
 
 router.route("/my-auctions")
     .get(getCreatedAuctions)

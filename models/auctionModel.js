@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 
 const auctionSchema = new mongoose.Schema({
-    itemName: {
+    productName: {
         type: String,
         required: true,
     },

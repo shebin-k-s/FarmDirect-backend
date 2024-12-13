@@ -2,21 +2,21 @@ import Auction from "../models/auctionModel.js";
 import Bid from "../models/bidModel.js";
 
 export const createAuction = async (req, res) => {
-    const { itemName, description, startingBid, startTime, endTime } = req.body;
+    const { productName, description, startingBid, startTime, endTime } = req.body;
 
-    if (!itemName || !description || !startingBid || !endTime) {
+    if (!productName || !description || !startingBid || !endTime) {
         return res.status(400).json({ message: "All fields must be provided" });
     }
     const createdBy = req.user.userId
 
     let imagePaths = [];
     if (req.files && req.files.length > 0) {
-        imagePaths = req.files.map(file => file.path);  // Store the file paths in an array
+        imagePaths = req.files.map(file => file.path);
     }
 
     try {
         const auction = new Auction({
-            itemName,
+            productName,
             description,
             startingBid,
             startTime,

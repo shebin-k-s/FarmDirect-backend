@@ -6,9 +6,18 @@ export const registerUser = async (req, res) => {
     const { fullName, phoneNumber, email, password, address } = req.body;
 
     try {
-        const existingUser = await User.findOne({ email });
+        if (!fullName || !password || !address || !phoneNumber || !email) {
+            return res.status(400).json({ message: "All fields are provided" });
+
+        }
+        const existingUser = await User.findOne({
+            $or: [
+                { phoneNumber },
+                { email }
+            ]
+        });
         if (existingUser) {
-            return res.status(400).json({ message: 'Email is already registered' });
+            return res.status(400).json({ message: 'Email or Phone number is already registered' });
         }
 
         const hashedPassword = bcrypt.hashSync(password, 10);
@@ -24,7 +33,9 @@ export const registerUser = async (req, res) => {
         await newUser.save();
 
         res.status(201).json({ message: 'User registered successfully' });
-    } catch (error) {        
+    } catch (error) {
+        console.log(error);
+
         res.status(500).json({ message: 'Error registering user', error: error.message });
     }
 }
@@ -32,10 +43,16 @@ export const registerUser = async (req, res) => {
 
 
 export const loginUser = async (req, res) => {
-    const { email, password } = req.body;
+    const { email, phoneNumber, password } = req.body;
 
     try {
-        const user = await User.findOne({ email });
+        const query = {};
+        if (email) {
+            query.email = email;
+        } else if (phoneNumber) {
+            query.phoneNumber = phoneNumber;
+        }
+        const user = await User.findOne(query);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -54,10 +71,11 @@ export const loginUser = async (req, res) => {
             message: 'Login successful',
             token,
             user: {
-                id: user._id,
-                username: user.username,
+                fullName: user.fullName,
                 email: user.email,
-                role: user.role,
+                phoneNumber: user.phoneNumber,
+                email: user.email,
+                address: user.address,
             },
         });
     } catch (error) {
