@@ -9,6 +9,7 @@ import Auction from './models/auctionModel.js'
 import Bid from './models/bidModel.js'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import Jwt from 'jsonwebtoken'
 
 dotenv.config()
 
@@ -50,7 +51,7 @@ chatNameSpace.on('connection', async (socket) => {
     }
 
     try {
-        const decodedToken = Jwt.verify(token, process.env.JWT_TOKEN);
+        const decodedToken = Jwt.verify(token, process.env.JWT_KEY);
         const userId = decodedToken.userId;
 
         const initializationComplete = new Promise(async (resolve) => {
@@ -147,37 +148,50 @@ auctionNameSpace.on('connection', async (socket) => {
     }
 
     try {
-        const decodedToken = Jwt.verify(token, process.env.JWT_TOKEN);
-        const userId = decodedToken.userId;
+        const decodedToken = Jwt.verify(token, process.env.JWT_KEY);
+        const userId = decodedToken.id;
 
         console.log(`User authenticated for auction namespace: ${userId}`);
 
-        socket.on('join-auction', async (auctionId) => {
+        socket.on('joinAuction', async (data) => {
             try {
-                const auction = await Auction.findById(auctionId);
+                const auction = await Auction.findById(data.auctionId);
                 if (!auction) {
-                    socket.emit('auction-error', { message: 'Auction not found' });
+                    socket.emit('auctionInfo', { message: 'Auction not found', status: false });
                     return;
                 }
-                socket.join(auctionId);
+                console.log("user joined auction");
+                socket.emit('auctionInfo', { message: 'joined auction', status: true });
+
+                socket.join(data.auctionId);
             } catch (error) {
                 console.error('Error joining auction:', error);
-                socket.emit('auction-error', { message: 'Failed to join auction' });
+                socket.emit('auctionInfo', { message: 'Failed to join auction', status: false });
             }
         });
 
-        socket.on('place-bid', async (data) => {
+        socket.on('placeBid', async (data) => {
             const { auctionId, bidAmount } = data;
 
             try {
                 const auction = await Auction.findById(auctionId);
                 if (!auction) {
-                    auctionNameSpace.to(auctionId).emit('bid-error', { message: 'Invalid auction.' });
+                    auctionNameSpace.to(auctionId).emit('bidError', { message: 'Invalid auction.' });
+                    return;
+                }
+                const currentTime = new Date();
+
+                if (auction.endTime < currentTime) {
+                    auctionNameSpace.to(socket.id).emit('bidError', { message: 'Auction has already completed, no more bids allowed.' });
+                    return;
+                }
+                if (auction.startTime > currentTime) {
+                    auctionNameSpace.to(socket.id).emit('bidError', { message: 'Auction has not yet started.' });
                     return;
                 }
 
-                if (bidAmount <= auction.highestBid) {
-                    auctionNameSpace.to(auctionId).emit('bid-error', { message: 'Bid amount too low.' });
+                if (bidAmount <= auction.highestBid || bidAmount < auction.startingBid) {
+                    auctionNameSpace.to(socket.id).emit('bidError', { message: 'Bid amount too low.' });
                     return;
                 }
 
@@ -185,7 +199,7 @@ auctionNameSpace.on('connection', async (socket) => {
                 auction.highestBidder = userId;
                 await auction.save();
 
-                auctionNameSpace.to(auctionId).emit('bid-updated', {
+                auctionNameSpace.to(auctionId).emit('bidUpdated', {
                     auctionId,
                     bidAmount,
                     userId,
@@ -201,7 +215,7 @@ auctionNameSpace.on('connection', async (socket) => {
 
             } catch (error) {
                 console.error('Error placing bid:', error);
-                auctionNameSpace.to(auctionId).emit('bid-error', { message: 'Failed to place bid.' });
+                auctionNameSpace.to(socket.id).emit('bidError', { message: 'Failed to place bid.' });
             }
         });
 
