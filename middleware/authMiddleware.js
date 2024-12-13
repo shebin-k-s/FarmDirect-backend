@@ -6,7 +6,7 @@ export const verifyToken = async (req, res, next) => {
     }
 
     try {
-        const decodedToken = Jwt.verify(token, process.env.JWT_TOKEN)
+        const decodedToken = Jwt.verify(token, process.env.JWT_KEY)
 
         req.user = decodedToken
         next()
