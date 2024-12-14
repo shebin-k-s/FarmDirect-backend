@@ -25,14 +25,6 @@ const userSchema = new mongoose.Schema({
         enum: ['user', 'admin', 'moderator'],
         default: 'user'
     },
-    bidHistory: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Bid'
-    }],
-    auctionhistory: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Auction'
-    }]
 })
 
 const User = mongoose.model('User', userSchema);
